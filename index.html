@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>In-Page AI Evaluator</title>
+
+  <!-- Puter.js SDK (Enables free, keyless client-side AI) -->
+  <script src="https://js.puter.com/v2/"></script>
+
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #cbd5e1;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      max-width: 750px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .container {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .question-box {
+      background-color: #eff6ff;
+      border-left: 4px solid var(--primary-color);
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 140px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .btn-submit {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      font-size: 0.95rem;
+      transition: background 0.2s ease;
+    }
+
+    .btn-submit:hover {
+      background: #1d4ed8;
+    }
+
+    /* Expandable In-Page AI Panel */
+    .ai-drawer {
+      margin-top: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .ai-header {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-align: center;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .ai-content {
+      display: none; /* Collapsed by default */
+      padding: 16px;
+      background: #ffffff;
+      line-height: 1.6;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .loading {
+      color: #64748b;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>Student Practice Task</h2>
+    
+    <div class="question-box">
+      <strong>Task:</strong> Explain the key differences between renewable and non-renewable energy sources. Provide two examples for each.
+    </div>
+
+    <textarea id="userResponse" placeholder="Type your full answer here..."></textarea>
+    
+    <button class="btn-submit" onclick="runInPageChecker()">Check Answer (In-Page AI)</button>
+
+    <!-- Expandable AI Drawer -->
+    <div class="ai-drawer">
+      <div class="ai-header" onclick="toggleDrawer()">
+        <span>🤖 In-Page AI Evaluation</span>
+        <span id="drawerToggleIcon">▼</span>
+      </div>
+      <div class="ai-content" id="aiOutput">
+        Click <strong>Check Answer</strong> above to expand AI feedback here.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Expand/collapse logic
+    function toggleDrawer() {
+      const content = document.getElementById('aiOutput');
+      const icon = document.getElementById('drawerToggleIcon');
+      if (content.style.display === "block") {
+        content.style.display = "none";
+        icon.innerText = "▼";
+      } else {
+        content.style.display = "block";
+        icon.innerText = "▲";
+      }
+    }
+
+    // Call AI via Puter.js
+    async function runInPageChecker() {
+      const studentInput = document.getElementById('userResponse').value.trim();
+      const outputBox = document.getElementById('aiOutput');
+      const icon = document.getElementById('drawerToggleIcon');
+
+      if (!studentInput) {
+        alert("Please enter a response before submitting.");
+        return;
+      }
+
+      // Automatically open drawer and set loading state
+      outputBox.style.display = "block";
+      icon.innerText = "▲";
+      outputBox.innerHTML = '<p class="loading">⏳ Processing your response with AI evaluator... Please wait.</p>';
+
+      const prompt = `
+        Act as an academic examiner. 
+        Evaluate the student's submission based on correctness, clarity, and structural completeness.
+        Provide constructive feedback, point out missing aspects, and award a final mark out of 10.
+        
+        Student Response:
+        "${studentInput}"
+      `;
+
+      try {
+        // Option to specify models e.g., 'gemini-2.0-flash', 'gpt-4o-mini', or default
+        const response = await puter.ai.chat(prompt, { model: 'gemini-2.0-flash' });
+        
+        // Render formatted feedback
+        outputBox.innerHTML = response.toString().replace(/\n/g, '<br>');
+      } catch (error) {
+        outputBox.innerHTML = `<span style="color: red;">Error during assessment: ${error.message}</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
